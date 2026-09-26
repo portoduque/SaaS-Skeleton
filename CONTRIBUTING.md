@@ -34,7 +34,7 @@ Do not introduce large infrastructure, agent frameworks or architectural pattern
 Use the project workflow:
 
 ```text
-UNDERSTAND -> RESEARCH -> PLAN -> TEST -> IMPLEMENT -> REVIEW -> VERIFY -> DOCUMENT -> DONE
+UNDERSTAND -> RESEARCH -> PLAN -> TEST -> IMPLEMENT -> REVIEW -> VERIFY -> DOCUMENT -> IN REVIEW -> HUMAN ACCEPTANCE -> DONE
 ```
 
 1. Create a focused branch.
@@ -46,6 +46,8 @@ UNDERSTAND -> RESEARCH -> PLAN -> TEST -> IMPLEMENT -> REVIEW -> VERIFY -> DOCUM
 7. Run all applicable verification gates.
 8. Update README/docs/config examples when affected.
 9. Open a focused pull request describing the reason and validation performed.
+10. When all applicable automated gates pass, move the issue to `In Review` and provide an issue-specific manual validation guide.
+11. Move the issue to `Done` only after explicit human confirmation that manual validation passed. Human acceptance does not authorize merge or deployment.
 
 ## Review expectations
 
