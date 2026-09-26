@@ -11,7 +11,7 @@ Do not implement later phases early unless a small prerequisite is unavoidable.
 Every implementation phase follows:
 
 ```text
-UNDERSTAND -> RESEARCH -> PLAN -> TEST -> IMPLEMENT -> REVIEW -> VERIFY -> DOCUMENT -> IN REVIEW -> HUMAN ACCEPTANCE
+UNDERSTAND -> RESEARCH -> PLAN -> TEST -> IMPLEMENT -> REVIEW -> VERIFY -> DOCUMENT -> IN REVIEW -> HUMAN ACCEPTANCE -> DONE
 ```
 
 Before a phase can be completed, all applicable checks must pass:
@@ -28,6 +28,8 @@ Before a phase can be completed, all applicable checks must pass:
 Review findings must be evidence-based. Performance changes must be backed by measurement or a documented bottleneck. Do not add infrastructure or abstractions merely because a pattern is common elsewhere.
 
 **Code updated + README stale = phase incomplete.**
+
+Automated verification may move work to `In Review`, but `Done` requires explicit human confirmation that the issue-specific manual validation guide passed. Human acceptance does not authorize merge or production deployment.
 
 ## Phase 0 — Repository foundation
 
