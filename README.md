@@ -143,6 +143,7 @@ SaaS-Skeleton/
 │           └── references/
 │               ├── verification-matrix.md
 │               ├── output-contract.md
+│               ├── manual-validation.md
 │               └── continuous-improvement.md
 ├── .claude/
 │   └── commands/
