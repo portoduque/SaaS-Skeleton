@@ -14,4 +14,4 @@
 - Verification matrix: `../.agents/skills/implement-issue/references/verification-matrix.md`
 - Output contract: `../.agents/skills/implement-issue/references/output-contract.md`
 
-- Human acceptance after automated implementation: `.agents/skills/implement-issue/references/manual-validation.md`.
+- Human acceptance after automated implementation: `../.agents/skills/implement-issue/references/manual-validation.md`.
