@@ -1,0 +1,7 @@
+interface:
+  display_name: "Implement Issue"
+  short_description: "Implement one SaaS-Skeleton issue end-to-end with full engineering gates"
+  default_prompt: "Implement the specified SaaS-Skeleton issue using the canonical issue workflow."
+
+policy:
+  allow_implicit_invocation: false
