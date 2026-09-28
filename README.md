@@ -149,6 +149,9 @@ SaaS-Skeleton/
 │   └── commands/
 │       └── implement-issue.md
 ├── .github/
+│   ├── workflows/
+│   │   └── security-baseline.yml
+│   ├── dependabot.yml
 │   └── pull_request_template.md
 ├── apps/
 │   ├── api/          # Spring Boot
@@ -160,9 +163,11 @@ SaaS-Skeleton/
 │   ├── IMPLEMENTATION_PLAN.md
 │   ├── TESTING.md
 │   ├── SECURITY-ARCHITECTURE.md
-│   └── ENGINEERING-WORKFLOW.md
+│   ├── ENGINEERING-WORKFLOW.md
+│   └── CI-CD-SECURITY.md
 ├── infra/
 ├── scripts/
+├── .semgrep.yml
 ├── AGENTS.md
 ├── CONTRIBUTING.md
 ├── SECURITY.md
@@ -208,6 +213,8 @@ Testing is risk-based rather than driven by a blanket global percentage. The pro
 A task is not complete while any required build, test, migration validation, security check or affected documentation is outdated.
 
 **Code updated + README stale = task incomplete.**
+
+**Tooling changed + onboarding stale = task incomplete.**
 
 ## Autonomous issue workflow
 
@@ -327,9 +334,59 @@ With Linear access, the agent may then move that issue from `In Review` to `Done
 - [Testing strategy](docs/TESTING.md)
 - [Security architecture](docs/SECURITY-ARCHITECTURE.md)
 - [Engineering workflow](docs/ENGINEERING-WORKFLOW.md)
+- [CI/CD and DevSecOps](docs/CI-CD-SECURITY.md)
 - [Agent rules](AGENTS.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
+
+## CI/CD and security baseline
+
+GitHub Actions is the independent verification boundary for human- or AI-produced changes.
+
+Current checks that are already meaningful in the foundation repository:
+
+- **Gitleaks 8.30.1** — scans Git history for committed secrets and redacts values in logs;
+- **Semgrep CE 1.178.0** — runs the project guardrails in `.semgrep.yml`;
+- **Trivy** — scans the repository for actionable HIGH/CRITICAL dependency and configuration findings;
+- **Dependabot** — checks GitHub Actions dependencies weekly.
+
+Java/Next.js build checks, CodeQL and SonarQube Cloud are intentionally added with Phase 1/POR-6, when `apps/api` and `apps/web` actually exist. The project does not create placeholder jobs that report green without testing application code.
+
+### Run the current security baseline locally
+
+The simplest path uses Docker. Run these commands from the repository root:
+
+```bash
+# 1. Secrets
+docker run --rm -v "$PWD:/repo" -w /repo zricethezav/gitleaks:v8.30.1 git --redact --verbose .
+
+# 2. Project static guardrails
+docker run --rm -v "$PWD:/src" semgrep/semgrep:1.178.0 semgrep scan --config /src/.semgrep.yml --error --metrics=off /src
+
+# 3. Dependency/configuration vulnerabilities
+docker run --rm -v "$PWD:/repo" -w /repo aquasec/trivy:0.70.0 fs --scanners vuln,misconfig --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 .
+```
+
+Expected result: each command exits with status `0` and reports no blocking finding.
+
+If your Docker installation does not expand `$PWD`, replace it with the absolute path to the cloned repository. GitHub Actions remains the authoritative merge-time check.
+
+### Open-source onboarding invariant
+
+The final root README must be sufficient by itself for a new user on a clean machine to go from clone to a fully configured, functioning SaaS-Skeleton:
+
+```text
+clone
+  -> install prerequisites
+  -> configure .env
+  -> start local services
+  -> configure required GitHub/external tools
+  -> run tests/security checks
+  -> verify CI
+  -> fully working project
+```
+
+Whenever a tool/account/secret/command changes, this README must be updated in the same change with exact setup steps, expected results and common fixes. The architecture and rollout policy are defined in [CI/CD and DevSecOps](docs/CI-CD-SECURITY.md).
 
 ## Local setup
 
