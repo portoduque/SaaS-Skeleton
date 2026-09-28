@@ -38,6 +38,10 @@ jobs:
         working-directory: apps/api
         run: ./mvnw --batch-mode --no-transfer-progress verify
 
+      - name: Verify backend coverage report
+        working-directory: apps/api
+        run: test -s target/site/jacoco/jacoco.xml
+
 
   frontend:
     name: CI / Frontend
@@ -72,6 +76,10 @@ jobs:
       - name: Test frontend
         working-directory: apps/web
         run: npm test
+
+      - name: Verify frontend coverage report
+        working-directory: apps/web
+        run: test -s coverage/lcov.info
 
       - name: Build frontend
         working-directory: apps/web
