@@ -392,7 +392,7 @@ Keep PRs focused and reversible. Prefer small coherent changes over large specul
 
 ## 13. Human review and manual acceptance
 
-Automated verification does not close an issue. Once all automated gates pass, `implement-issue` must move the Linear issue to **`In Review`** when tracker access is available and provide a complete issue-specific manual validation guide.
+Automated verification does not close an issue. Once all automated gates pass, `implement-issue` provides a complete issue-specific manual validation guide. It may move the Linear issue to **`In Review`** only when explicit tracker-status authority has been granted for that run.
 
 The guide must be simple to follow, use numbered actions, state the expected result after each step and cover every acceptance criterion that is meaningfully observable by a human. It should validate the feature/operator experience rather than ask the human to repeat automated unit/integration checks.
 
