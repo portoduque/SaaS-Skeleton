@@ -37,7 +37,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if git diff --quiet -- apps/web/package-lock.json; then
+          if [ -z "$(git status --porcelain -- apps/web/package-lock.json)" ]; then
             echo "package-lock.json is already synchronized."
             exit 0
           fi
