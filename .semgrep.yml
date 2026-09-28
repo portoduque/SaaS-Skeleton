@@ -1,0 +1,48 @@
+rules:
+  - id: github-actions-no-pull-request-target
+    languages: [generic]
+    severity: ERROR
+    message: Do not execute untrusted pull request code with pull_request_target. Use pull_request with least-privilege permissions.
+    paths:
+      include:
+        - .github/workflows/*.yml
+        - .github/workflows/*.yaml
+    pattern-regex: '(?m)^\s*pull_request_target\s*:'
+
+  - id: github-actions-no-write-all
+    languages: [generic]
+    severity: ERROR
+    message: Do not grant write-all to GitHub Actions. Declare the minimum permissions required by each workflow/job.
+    paths:
+      include:
+        - .github/workflows/*.yml
+        - .github/workflows/*.yaml
+    pattern-regex: '(?m)^\s*permissions\s*:\s*write-all\s*$'
+
+  - id: frontend-no-direct-postgres-client
+    languages: [typescript, javascript]
+    severity: ERROR
+    message: The Next.js frontend must not access PostgreSQL directly. Use the generated backend API client.
+    paths:
+      include:
+        - apps/web/**/*.ts
+        - apps/web/**/*.tsx
+        - apps/web/**/*.js
+        - apps/web/**/*.jsx
+    patterns:
+      - pattern-either:
+          - pattern: import ... from "pg"
+          - pattern: import ... from "postgres"
+          - pattern: require("pg")
+          - pattern: require("postgres")
+
+  - id: no-hibernate-schema-auto-update
+    languages: [generic]
+    severity: ERROR
+    message: Production schema evolution must use Flyway; do not configure Hibernate ddl-auto update/create/create-drop.
+    paths:
+      include:
+        - "**/*.properties"
+        - "**/*.yml"
+        - "**/*.yaml"
+    pattern-regex: '(?i)(ddl-auto|hbm2ddl\.auto)\s*[:=]\s*(update|create|create-drop)'
