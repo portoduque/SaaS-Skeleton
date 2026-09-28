@@ -6,6 +6,8 @@ Build the starter incrementally. Each phase has a narrow goal and must leave the
 
 Do not implement later phases early unless a small prerequisite is unavoidable.
 
+CI/DevSecOps is incremental: Phase 1 introduces the first real gates, later phases add checks as their capabilities exist, Phase 10 hardens enforcement, and Phase 12 validates the complete system. See [CI/CD and DevSecOps](CI-CD-SECURITY.md).
+
 ## Global engineering gate
 
 Every implementation phase follows:
@@ -70,13 +72,18 @@ Deliverables:
 - `apps/web` Next.js/TypeScript strict project;
 - root scripts or documented commands;
 - initial formatting/lint configuration;
-- Dockerfiles where required.
+- Dockerfiles where required;
+- baseline GitHub Actions for backend compile/test and frontend lint/typecheck/test/build;
+- baseline DevSecOps checks that are meaningful for the code that exists: Gitleaks, CodeQL, Semgrep CE, Trivy and SonarQube Cloud OSS;
+- Dependabot for package ecosystems that actually exist;
+- minimal `main` ruleset only after the initial checks are stable.
 
 Tests/gate:
 
 - backend compiles and baseline test passes;
-- frontend typecheck/lint/build passes;
-- README setup commands match reality.
+- frontend typecheck/lint/test/build passes;
+- configured CI/security checks run successfully and do not silently skip existing application code;
+- README setup and external-tool configuration steps match reality.
 
 ## Phase 2 — PostgreSQL, PgBouncer and Flyway
 
@@ -243,24 +250,26 @@ Gate:
 - no business authorization exists solely in frontend;
 - critical Playwright flows pass.
 
-## Phase 10 — CI and open-source contribution workflow
+## Phase 10 — CI/DevSecOps hardening and open-source contribution workflow
 
-**Goal:** prevent invalid agent/human changes from merging.
+**Goal:** harden and enforce the CI/DevSecOps pipeline that has existed since Phase 1.
 
 Deliverables:
 
-- GitHub Actions backend build/test;
-- frontend lint/typecheck/build;
-- integration tests;
-- critical Playwright smoke tests when practical in CI;
-- container build validation;
-- dependency/security automation supported by GitHub;
-- pull request template with verification/security/documentation checklist;
-- evidence-based diff review expectations.
+- audit and harden existing GitHub Actions permissions, timeouts, concurrency, caches, artifacts and fork behavior;
+- finalize required backend/frontend/integration/contract/Playwright checks accumulated by earlier phases;
+- finalize Gitleaks, CodeQL, Semgrep CE, Trivy and SonarQube Cloud OSS configuration;
+- add Trivy image scanning when application images exist;
+- validate Dependabot coverage for Maven, npm, GitHub Actions and Docker ecosystems that exist;
+- validate/refine the existing pull request template;
+- configure the definitive `main` ruleset/branch protection and required checks;
+- keep external actions pinned to immutable commit SHAs and update them deliberately.
 
 Gate:
 
-- intentionally broken backend/frontend checks block the pipeline.
+- intentionally broken backend/frontend/security checks block the pipeline;
+- untrusted fork code cannot receive repository secrets;
+- merge to `main` is blocked until selected required checks are green.
 
 ## Phase 11 — Production reference deployment
 
@@ -273,7 +282,9 @@ Deliverables:
 - internal-only service networking;
 - health/restart configuration;
 - resource/configuration guidance;
-- environment variable documentation.
+- environment variable documentation;
+- reproducible Continuous Delivery workflow that builds/verifies deliverables from `main`;
+- separately authorized production-reference deployment path rather than mandatory unattended deployment.
 
 Gate:
 
@@ -289,16 +300,17 @@ Deliverables:
 - automated external PostgreSQL backup example/reference;
 - documented restore procedure;
 - restore validation in a disposable environment;
-- security/configuration review;
-- dependency review;
+- OWASP ZAP baseline validation against an ephemeral/staging target and explicit manual full scan path for an approved non-production target;
+- final Gitleaks/CodeQL/Semgrep/Sonar/Trivy and dependency review;
 - JPA/PostgreSQL performance review using real query/runtime evidence where available;
 - repository cleanup;
-- README end-to-end verification from clone to running system.
+- clean-room README verification from a fresh clone through a fully configured, functioning system.
 
 Gate:
 
-- a fresh user can follow the README successfully;
-- backup can be restored using the documented procedure;
+- a fresh user can follow only the root README from clone to a fully configured, functioning system;
+- backup can be restored using the documented procedure and validated;
+- final dynamic/security scans have no unresolved blocking finding;
 - no obsolete/dead setup files remain;
 - all required CI gates are green.
 
