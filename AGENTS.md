@@ -88,7 +88,7 @@ See `.agents/skills/implement-issue/references/continuous-improvement.md`.
 
 ## Human acceptance gate
 
-After all automated gates pass, `implement-issue` moves the Linear issue to `In Review` when available and returns a complete, issue-specific manual validation guide. `Done` requires an explicit human statement that the guide passed. If the human reports a failure, return the issue to `In Progress`, correct and reverify it, then hand it back to `In Review`.
+After all automated gates pass, `implement-issue` returns a complete, issue-specific manual validation guide and may move the Linear issue to `In Review` only when explicit tracker-status authority has been granted for that run. `Done` requires an explicit human statement that the guide passed. If the human reports a failure, return the issue to `In Progress`, correct and reverify it, then hand it back to `In Review`.
 
 See `.agents/skills/implement-issue/references/manual-validation.md`.
 
