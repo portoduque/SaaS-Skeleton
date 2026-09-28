@@ -14,6 +14,10 @@ UNDERSTAND -> RESEARCH -> PLAN -> TEST -> IMPLEMENT -> REVIEW -> VERIFY -> DOCUM
 
 Do not skip directly from implementation to "done".
 
+Once GitHub Actions checks exist, `VERIFY` includes both local/agent verification and the independent CI result for the pull request. A local green run cannot override a failing required GitHub check.
+
+See `CI-CD-SECURITY.md` for the incremental CI/CD and DevSecOps rollout.
+
 ## Canonical autonomous issue command
 
 For full implementation of one tracked issue, use the repository workflow defined at:
@@ -283,7 +287,29 @@ Common checks:
 
 Do not add Redis, caches, queues, read replicas or new infrastructure without a measured or documented need.
 
-## 9. Verification loop
+## 9. Independent CI verification
+
+After local verification and PR creation, GitHub Actions re-runs the applicable checks independently.
+
+Rules:
+
+- required CI checks must be green before merge readiness;
+- a check is added only when its target exists and the check proves a real property;
+- do not create a placeholder success job for absent application code;
+- untrusted fork code never receives repository secrets;
+- Sonar or other secret-backed integrations may be unavailable on an untrusted fork, but secret-independent core checks must still run;
+- CI failure follows the same evidence-based recovery loop as local failures;
+- no one may make CI green by deleting tests, disabling scanners, broadening ignores or weakening security.
+
+### CI evolution
+
+- Phase 1: baseline backend/frontend CI plus Gitleaks, CodeQL, Semgrep CE, Trivy, Sonar and Dependabot as their targets exist;
+- Phases 2-9: database/API/auth/tenant/contract/frontend/E2E gates accumulate with the implementation;
+- Phase 10: harden permissions, supply chain, rulesets and required checks;
+- Phase 11: add Continuous Delivery with separately authorized production deployment;
+- Phase 12: add final ZAP, restore and fresh-clone validation.
+
+## 10. Verification loop
 
 Before declaring a task complete, run every applicable gate.
 
@@ -338,7 +364,9 @@ Confirm:
 
 **Code updated + README stale = task incomplete.**
 
-## 10. Build/test failure behavior
+**Tooling changed + onboarding stale = task incomplete.**
+
+## 11. Build/test failure behavior
 
 When a validation step fails:
 
@@ -349,7 +377,7 @@ When a validation step fails:
 
 Do not hide failures by disabling tests, weakening validation, skipping migrations or relaxing security checks unless the task explicitly and validly changes that rule.
 
-## 11. Pull request discipline
+## 12. Pull request discipline
 
 A PR should contain:
 
@@ -362,9 +390,9 @@ A PR should contain:
 
 Keep PRs focused and reversible. Prefer small coherent changes over large speculative rewrites.
 
-## 12. Human review and manual acceptance
+## 13. Human review and manual acceptance
 
-Automated verification does not close an issue. Once all automated gates pass, `implement-issue` must move the Linear issue to **`In Review`** when tracker access is available and provide a complete issue-specific manual validation guide.
+Automated verification does not close an issue. Once all automated gates pass, `implement-issue` provides a complete issue-specific manual validation guide. It may move the Linear issue to **`In Review`** only when explicit tracker-status authority has been granted for that run.
 
 The guide must be simple to follow, use numbered actions, state the expected result after each step and cover every acceptance criterion that is meaningfully observable by a human. It should validate the feature/operator experience rather than ask the human to repeat automated unit/integration checks.
 
@@ -374,7 +402,7 @@ Human validation approval does not implicitly authorize merge or production depl
 
 See `.agents/skills/implement-issue/references/manual-validation.md`.
 
-## 13. Definition of Done
+## 14. Definition of Done
 
 A task is done only when:
 
@@ -390,7 +418,7 @@ A task is done only when:
 
 If an automated required gate is failing, the task is **NOT READY**. If automated gates pass but human validation has not happened yet, the task is **IN REVIEW**, not Done.
 
-## 14. Deliberate non-adoptions
+## 15. Deliberate non-adoptions
 
 The repository intentionally does **not** adopt several common agent-framework practices because they would add more complexity than value here:
 

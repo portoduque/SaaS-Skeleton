@@ -15,7 +15,7 @@ IMPLEMENT
       -> pass: explicit human confirmation -> DONE
 ```
 
-`implement-issue` may move an issue to **In Review** after all automated gates pass. It must never move that issue to **Done** in the same implementation run.
+`implement-issue` may move an issue to **In Review** after all automated gates pass only when explicit tracker-status authority has been granted for that run. It must never move that issue to **Done** in the same implementation run.
 
 `Done` requires explicit human confirmation that the manual validation guide was completed successfully.
 

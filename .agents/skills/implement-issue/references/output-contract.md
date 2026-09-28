@@ -66,6 +66,7 @@ POR-9 — IN REVIEW
 ✓ Unit/regression/integration tests passing
 ✓ Security/tenant checks passing
 ✓ Build and contract validation passing
+✓ Applicable GitHub Actions checks passing
 ✓ README/docs synchronized
 ✓ Linear: In Review
 
@@ -125,7 +126,7 @@ Next action:
 - ...
 ```
 
-Do not move the issue to `In Review` while a mandatory automated gate fails.
+Do not move the issue to `In Review` while a mandatory automated gate fails. This includes applicable independent GitHub Actions checks once they exist.
 
 ## Final BLOCKED output
 

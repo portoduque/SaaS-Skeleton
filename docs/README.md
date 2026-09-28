@@ -7,6 +7,7 @@
 - [Testing](TESTING.md)
 - [Security Architecture](SECURITY-ARCHITECTURE.md)
 - [Engineering Workflow](ENGINEERING-WORKFLOW.md)
+- [CI/CD and DevSecOps](CI-CD-SECURITY.md)
 
 ## Agent workflow
 

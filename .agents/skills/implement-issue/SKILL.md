@@ -326,7 +326,7 @@ The broad target includes, when applicable:
 - production builds;
 - OpenAPI/client regeneration checks;
 - Docker/container validation;
-- dependency/security checks;
+- dependency/security checks, including configured Gitleaks/CodeQL/Semgrep/Trivy/Sonar gates when applicable;
 - performance/load tests only where the issue creates a relevant risk.
 
 Tests passing does not by itself mean the issue is done. Acceptance criteria, security, docs and architecture gates must also pass.
@@ -349,6 +349,8 @@ Verify documented paths/commands exist or are explicitly marked as planned.
 
 **Code changed + README stale = NOT READY.**
 
+**Tooling changed + onboarding stale = NOT READY.**
+
 ### Phase 14 — Final hygiene
 
 Before declaring readiness:
@@ -364,20 +366,24 @@ Before declaring readiness:
 
 Do not perform a repository-wide cleanup unrelated to the issue.
 
-### Phase 15 — PR, Linear In Review and human validation handoff
+### Phase 15 — PR, independent CI, Linear In Review and human validation handoff
 
-When all required automated gates are green and repository credentials/tools are available:
+When all required local/agent gates are green and repository credentials/tools are available:
 
 1. create clean descriptive commits if not already created;
 2. create a PR referencing the issue;
-3. include the validation evidence, migration/config notes and relevant risks;
-4. if Linear access is available, attach/link the PR and move the issue to the exact **`In Review`** status;
-5. generate the issue-specific manual validation guide defined in `references/manual-validation.md`;
-6. stop and wait for explicit human acceptance.
+3. include local validation evidence, migration/config notes and relevant risks;
+4. inspect the GitHub Actions checks that apply to the PR;
+5. if a mandatory CI check fails, return to the recovery loop, make the smallest correct fix, push it and re-check CI;
+6. do not treat a skipped/absent check as proof when the changed component should have been validated by that check;
+7. only after applicable mandatory CI is green, perform the tracker/human handoff;
+8. if Linear access and explicit tracker-status authority are available, attach/link the PR and move the issue to the exact **`In Review`** status; otherwise leave tracker state unchanged and report the handoff;
+9. generate the issue-specific manual validation guide defined in `references/manual-validation.md`;
+10. stop and wait for explicit human acceptance.
 
 Do **not** move the issue to `Done` in this implementation run. Automated success means ready for human review, not human-accepted.
 
-Do **not** merge automatically. `main` remains behind the human/CI review gate. Human acceptance of the validation guide authorizes the `In Review` -> `Done` tracker transition only; it does not authorize merge or deployment.
+Do **not** merge automatically unless the user explicitly authorizes merge for this exact run. `main` remains behind the human/CI review gate by default. Human acceptance of the validation guide authorizes the `In Review` -> `Done` tracker transition only; it does not authorize merge or deployment.
 
 If the team does not have an `In Review` status, do not substitute another state. Keep the issue `In Progress`, report the tracker-configuration gap and request that the status be added once.
 

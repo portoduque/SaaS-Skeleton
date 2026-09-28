@@ -2,6 +2,8 @@
 
 Run the smallest relevant checks during development, then the full applicable matrix before the issue can enter `In Review`.
 
+Once GitHub Actions gates exist, local verification is not a substitute for the independent CI result.
+
 Do not run tests that cannot provide useful signal for the changed surface, but do not omit a test class merely to save time when the issue affects it.
 
 ## 1. Baseline and static checks
@@ -139,15 +141,23 @@ When Docker/Compose/Caddy/runtime changes:
 - database/pooler/backend are not accidentally published in production topology;
 - runtime secrets are not baked into images.
 
-## 11. Dependency/security validation
+## 11. Dependency/security/quality validation
 
-When dependencies or security-sensitive code changes:
+Run configured independent tooling when applicable to the current repository state:
 
-- dependency vulnerability checks configured by the project/CI;
-- secret exposure check on diff;
+- Gitleaks for secret exposure;
+- CodeQL for configured supported languages;
+- Semgrep CE for approved static/project guardrails;
+- Trivy for dependency/configuration vulnerabilities and later container images;
+- SonarQube Cloud OSS for quality/New Code analysis and imported coverage when configured;
+- Dependabot visibility for package ecosystems that exist;
 - security review of auth/authz/input/SQL/CORS/CSRF/headers as applicable.
 
-Never make a check pass by weakening the protection it validates.
+For final runnable-system hardening, include OWASP ZAP according to `docs/CI-CD-SECURITY.md`.
+
+A CI/security check must not silently pass because its intended target is absent. Add/require the check when the target exists.
+
+Never make a check pass by weakening the protection it validates. False-positive suppressions must be narrow and justified.
 
 ## 12. Performance validation
 

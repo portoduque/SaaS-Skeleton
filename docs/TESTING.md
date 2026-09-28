@@ -46,6 +46,27 @@ The `implement-issue` workflow considers all of the following and runs every app
 
 The detailed matrix lives in `.agents/skills/implement-issue/references/verification-matrix.md`.
 
+## Independent CI and quality gates
+
+Local or agent-run verification is necessary but not sufficient once a GitHub Actions gate exists. The same relevant build/test/security checks must run independently in CI before merge readiness.
+
+Tool responsibilities are intentionally separated:
+
+- Gitleaks: secrets;
+- CodeQL: deeper static/data-flow security analysis;
+- Semgrep CE: fast static/project-specific guardrails;
+- Trivy: dependency, configuration and container vulnerability scanning;
+- SonarQube Cloud OSS: quality/New Code analysis and imported JaCoCo/LCOV coverage;
+- Dependabot: update visibility;
+- Playwright: critical browser journeys;
+- OWASP ZAP: final dynamic web validation once a runnable target exists.
+
+A scanner does not replace behavioral tests. Passing Sonar/CodeQL/Semgrep cannot prove RBAC, tenant isolation, session lifecycle or domain behavior.
+
+CI is introduced incrementally. A check must not report success merely because the application component it is supposed to test does not exist; add the check when its target exists.
+
+See `CI-CD-SECURITY.md`.
+
 ## Backend tests
 
 ### Unit tests
@@ -191,7 +212,8 @@ Frontend: lint -> typecheck -> relevant tests -> build
 Contract: OpenAPI -> generated client -> frontend typecheck/build
 E2E: critical smoke tests
 Containers: image build when affected
-Security: relevant checks/review
+Security: Gitleaks/CodeQL/Semgrep/Trivy plus relevant auth/tenant review when applicable
+Quality: SonarQube Cloud quality/New Code analysis when configured
 Docs: README/.env/docs synchronization
 Diff: accidental/dead/unrelated changes review
 ```

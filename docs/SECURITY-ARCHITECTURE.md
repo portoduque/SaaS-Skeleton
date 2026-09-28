@@ -108,6 +108,19 @@ Rules:
 - logs must not include passwords, reset/verification tokens, session identifiers, API keys or unnecessary personal data;
 - if a secret is exposed, rotate it and review history/similar locations rather than merely deleting the current line.
 
+## CI/CD trust boundary
+
+GitHub Actions is an independent trust boundary for agent-produced changes.
+
+Rules:
+
+- pull-request code is untrusted input to the CI system;
+- fork pull requests do not receive repository secrets;
+- CI success does not authorize merge, Linear `Done`, or production deployment by itself;
+- production delivery/deployment uses a separately authorized workflow/environment;
+- external service tokens such as `SONAR_TOKEN` stay in GitHub Actions secrets and are never committed or echoed;
+- only checks that reliably report for the relevant PR class may become required status checks.
+
 ## CSRF, CORS and browser security
 
 Because the initial web flow uses cookie-backed sessions:
@@ -135,10 +148,21 @@ Implementation is introduced in the relevant authentication phase and must remai
 - justify new dependencies;
 - prefer framework/JDK/browser capabilities when adequate;
 - use lockfiles/wrappers and reproducible builds;
-- keep dependencies current through automated visibility such as Dependabot where useful;
-- use CodeQL/available static security checks in CI where they add signal;
+- keep dependencies current through Dependabot for ecosystems that actually exist;
+- use Gitleaks for CI secret detection and GitHub Secret Scanning for platform-side public-repository coverage;
+- use CodeQL for deeper code/data-flow security analysis;
+- use Semgrep CE for fast/static and project-specific guardrails;
+- use Trivy for dependency/configuration/container vulnerability scanning;
+- use SonarQube Cloud OSS primarily for independent quality/New Code analysis and imported coverage;
+- pin third-party GitHub Actions to immutable commit SHAs;
 - avoid `curl | sh`-style installation paths in documented project workflows;
-- do not relax CI permissions unnecessarily.
+- keep GitHub Actions permissions least-privilege and add explicit timeouts/concurrency controls where appropriate;
+- never expose repository secrets to untrusted fork code;
+- never use `pull_request_target` to execute untrusted fork code merely to access secrets.
+
+A failing security gate must be fixed or narrowly suppressed with documented evidence. Do not weaken the control to obtain a green build.
+
+The full rollout and tool boundaries live in `CI-CD-SECURITY.md`.
 
 ## Security review triggers
 
