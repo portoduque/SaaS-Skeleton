@@ -5,8 +5,8 @@ rules:
     message: Do not execute untrusted pull request code with pull_request_target. Use pull_request with least-privilege permissions.
     paths:
       include:
-        - .github/workflows/*.yml
-        - .github/workflows/*.yaml
+        - /.github/workflows/*.yml
+        - /.github/workflows/*.yaml
     pattern-regex: '(?m)^\s*pull_request_target\s*:'
 
   - id: github-actions-no-write-all
@@ -15,26 +15,21 @@ rules:
     message: Do not grant write-all to GitHub Actions. Declare the minimum permissions required by each workflow/job.
     paths:
       include:
-        - .github/workflows/*.yml
-        - .github/workflows/*.yaml
+        - /.github/workflows/*.yml
+        - /.github/workflows/*.yaml
     pattern-regex: '(?m)^\s*permissions\s*:\s*write-all\s*$'
 
   - id: frontend-no-direct-postgres-client
-    languages: [typescript, javascript]
+    languages: [generic]
     severity: ERROR
     message: The Next.js frontend must not access PostgreSQL directly. Use the generated backend API client.
     paths:
       include:
-        - apps/web/**/*.ts
-        - apps/web/**/*.tsx
-        - apps/web/**/*.js
-        - apps/web/**/*.jsx
-    patterns:
-      - pattern-either:
-          - pattern: import ... from "pg"
-          - pattern: import ... from "postgres"
-          - pattern: require("pg")
-          - pattern: require("postgres")
+        - /apps/web/**/*.ts
+        - /apps/web/**/*.tsx
+        - /apps/web/**/*.js
+        - /apps/web/**/*.jsx
+    pattern-regex: '(?m)^\s*(?:import\b.*\bfrom\s*["''](?:pg|postgres)["'']|(?:const|let|var)\b.*=\s*require\(["''](?:pg|postgres)["'']\))'
 
   - id: no-hibernate-schema-auto-update
     languages: [generic]
