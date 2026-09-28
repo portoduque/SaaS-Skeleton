@@ -17,6 +17,14 @@ The project intends to follow Semantic Versioning once releases begin.
 - Added the canonical `implement-issue` workflow with Codex, Antigravity and Claude Code adapters, autonomous scope-controlled execution, comprehensive test/coverage gates, security/performance reviews and concise state-first output.
 - Added human-governed continuous improvement for `implement-issue`: agents may detect and propose evidence-based workflow improvements from real usage, but every workflow change requires explicit human approval with rationale, expected benefit and trade-offs before editing.
 - Aligned contribution and implementation-plan documentation with the human acceptance gate.
+- Added the CI/CD and DevSecOps architecture, incremental rollout and clean-machine README onboarding invariant.
+
+### CI / Security
+
+- Added a foundation GitHub Actions security baseline with Gitleaks, Semgrep CE and Trivy.
+- Added Dependabot coverage for GitHub Actions; Maven/npm/Docker ecosystems are enabled only when their manifests exist.
+- Pinned third-party GitHub Actions used by the baseline to immutable commit SHAs.
+- Updated the canonical agent workflow so applicable independent GitHub Actions checks are part of readiness.
 
 ### Changed
 
