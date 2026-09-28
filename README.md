@@ -252,7 +252,7 @@ HUMAN ACCEPTANCE → DONE
 
 The workflow is intentionally autonomous after explicit invocation. It may stop for a genuine blocker or an unapproved irreversible/destructive action, but it must not interrupt for routine implementation decisions. It never merges or deploys automatically.
 
-A successful automated run ends in **`In Review`**, not `Done`. The agent links/creates the PR when tooling allows, moves the Linear issue to `In Review`, and returns a complete issue-specific manual validation guide with simple numbered actions and the expected result after each step. `Done` requires explicit human confirmation that this guide passed. If manual validation fails, the issue returns to `In Progress`, is fixed/reverified, and then returns to `In Review`.
+A successful automated run ends in **`In Review`**, not `Done`. The agent links/creates the PR when tooling allows and returns a complete issue-specific manual validation guide with simple numbered actions and the expected result after each step. It changes the Linear status only when explicit tracker-status authority has been granted for that run. `Done` requires explicit human confirmation that this guide passed. If manual validation fails, the issue returns to `In Progress`, is fixed/reverified, and then returns to `In Review`.
 
 ### The workflow improves over time — with human approval
 
