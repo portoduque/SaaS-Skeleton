@@ -102,6 +102,8 @@ UNDERSTAND -> RESEARCH -> PLAN -> TEST -> IMPLEMENT -> REVIEW -> VERIFY -> DOCUM
 
 When a user explicitly invokes the repository's issue implementation workflow, `.agents/skills/implement-issue/SKILL.md` is the canonical execution procedure and must be followed completely.
 
+For workflow communication: analyze deeply and report minimally. Compress presentation, never evidence; routine successful logs should be summarized at the source while failures, risks, unavailable verification and human decisions retain the detail needed to act.
+
 See `docs/ENGINEERING-WORKFLOW.md` for the general workflow.
 
 ### Understand
@@ -114,10 +116,12 @@ See `docs/ENGINEERING-WORKFLOW.md` for the general workflow.
 
 Before creating new code or dependencies:
 
-1. search the repository for an existing solution;
-2. consult official/version-specific documentation when framework behavior matters;
-3. prefer mature built-in/framework capabilities over custom utilities when they reduce risk;
-4. import only the useful pattern, not an entire external architecture.
+1. first verify whether the requested outcome is already satisfied; if so, prove it instead of manufacturing a change;
+2. search the repository for an existing solution/capability;
+3. prefer mature built-in/framework/runtime capabilities over custom utilities when they reduce risk;
+4. consult official/version-specific documentation when framework behavior matters;
+5. add new abstractions/dependencies only when simpler existing capabilities are insufficient;
+6. import only the useful pattern, not an entire external architecture.
 
 ### Plan proportionally
 
@@ -209,6 +213,12 @@ Do not create low-value tests for generated code, static configuration, CSS clas
 
 After implementation, review the complete diff and enough surrounding code to understand it.
 
+For material behavior/API/schema/config changes, reconcile **current contract -> requested delta -> resulting contract** and preserve existing obligations the issue did not authorize removing.
+
+If the diff changes tests, assertions, coverage thresholds, lint/type rules, CI, scanners or suppressions/exclusions, verify that the quality bar was not silently weakened to obtain green output.
+
+Also check solution economy: a new abstraction, wrapper, dependency or configuration layer must earn its ownership by solving a concrete requirement more effectively than an existing project/framework capability.
+
 Do not manufacture findings. A meaningful finding should state:
 
 - exact file/location;
@@ -296,6 +306,10 @@ Docker Compose is the initial orchestration model. Do not add Kubernetes until a
 ## Verification loop
 
 Before declaring work complete, run every applicable gate.
+
+For each material gate, distinguish **PASS**, **FAIL**, **UNAVAILABLE/UNVERIFIED** and **NOT APPLICABLE** from actual evidence. Missing tooling, skipped execution or absent CI output is never a PASS.
+
+Before `In Review`, re-check the current integration base when available. Unrelated base movement does not invalidate good evidence; relevant changes to affected code/contracts/dependencies/test definitions require reconciliation and rerunning only the checks whose inputs changed. Do not auto-rebase/merge solely because the base moved.
 
 ### Backend
 
