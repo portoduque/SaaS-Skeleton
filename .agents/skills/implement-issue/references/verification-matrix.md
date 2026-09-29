@@ -6,6 +6,17 @@ Once GitHub Actions gates exist, local verification is not a substitute for the 
 
 Do not run tests that cannot provide useful signal for the changed surface, but do not omit a test class merely to save time when the issue affects it.
 
+## Result semantics
+
+For every material applicable check, use evidence-backed status:
+
+- **PASS** — actually executed/observed evidence proves the result;
+- **FAIL** — actually executed/observed evidence contradicts it;
+- **UNAVAILABLE/UNVERIFIED** — the capability/environment cannot produce the proof; use the strongest safe alternative and report the limitation;
+- **NOT APPLICABLE** — the issue does not affect that surface.
+
+Missing tooling, skipped execution, absent CI output or lack of contradictory evidence never counts as PASS.
+
 ## 1. Baseline and static checks
 
 When supported by the current implementation:
@@ -158,6 +169,8 @@ For final runnable-system hardening, include OWASP ZAP according to `docs/CI-CD-
 A CI/security check must not silently pass because its intended target is absent. Add/require the check when the target exists.
 
 Never make a check pass by weakening the protection it validates. False-positive suppressions must be narrow and justified.
+
+When the change touches a quality-control mechanism itself (tests, assertions, coverage thresholds, lint/type rules, CI conditions, scanner configuration, suppressions/exclusions), verify that the established quality bar was not silently lowered. Treat unexplained skips, deleted assertions, broader ignores/exclusions, `continue-on-error`-style bypasses or reduced thresholds as findings when they weaken an existing required control.
 
 ## 12. Performance validation
 

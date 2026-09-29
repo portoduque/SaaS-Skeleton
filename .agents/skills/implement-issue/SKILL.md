@@ -65,6 +65,8 @@ Never deploy to production, merge to `main`, force-push, rotate secrets, delete 
 5. Preserve unrelated user work. Never discard, overwrite or silently absorb unrelated changes.
 6. If safe, create/switch to a focused branch named from the issue key and short slug.
 7. Confirm blocking dependencies are satisfied before implementation.
+8. Record which relevant capabilities/checks are actually available. A check that cannot be executed is `UNAVAILABLE/UNVERIFIED`, never an inferred pass.
+9. When VCS exposes it, capture the current integration base/reference so freshness can be checked before `In Review`.
 
 Output a compact progress update using the format in `references/output-contract.md`.
 
@@ -81,7 +83,8 @@ Convert the issue into a small internal execution contract:
 - frontend implications;
 - performance risks;
 - documentation/configuration impact;
-- tests needed to prove completion.
+- tests needed to prove completion;
+- existing behavior/contracts that must remain intact when the issue modifies an existing surface.
 
 Separate findings into:
 
@@ -92,13 +95,13 @@ Do not create another planning document unless the repository explicitly needs a
 
 ### Phase 3 — Ground in existing patterns and current sources
 
-Before writing new implementation code:
+Before writing new implementation code, use this order:
 
-1. Find the closest existing repository patterns for naming, errors, logging, data access, tests and API style.
-2. Reuse a good existing pattern instead of inventing a second one.
-3. When behavior depends on framework/library version or an API could have changed, verify against current official documentation.
-4. Prefer built-in/mature capabilities over a custom abstraction when they solve the concrete requirement with less risk.
-5. Do not add a dependency unless it is necessary and demonstrably better than existing capabilities.
+1. Check whether the requested outcome is already satisfied by existing behavior/configuration. If yes, verify the acceptance criteria and do not manufacture code changes.
+2. Find the closest existing repository capability/pattern and reuse it when it faithfully solves the requirement.
+3. Prefer a standard framework/runtime/platform capability over a new custom abstraction when repository/version evidence shows it is sufficient.
+4. When behavior depends on framework/library version or an API could have changed, verify against current official documentation.
+5. Add new ownership (abstraction, wrapper, helper, dependency or infrastructure) only when the simpler options above are insufficient and the issue provides a concrete reason.
 
 Do not copy an external architecture wholesale. Import only the useful pattern.
 
@@ -274,6 +277,12 @@ Use these axes:
 7. test quality/coverage;
 8. documentation/configuration sync.
 
+For a material behavior/API/schema/configuration change, explicitly reconcile **current contract -> requested delta -> resulting contract**. Preserve existing behavior that the issue did not authorize removing.
+
+If the diff changes the mechanisms that decide whether work passes (tests, coverage thresholds, lint/type rules, CI, scanners, suppressions/exclusions), perform a **quality-bar integrity check**. Do not accept a green result produced by weakening/removing/skipping the control unless that change is explicitly required and justified by the issue/project.
+
+Perform a lightweight **solution-economy check**: new abstractions, wrappers, dependencies or configuration layers must provide concrete value that an existing project/framework capability cannot provide more simply.
+
 Do not manufacture findings. A blocking finding must have evidence:
 
 - exact location;
@@ -329,6 +338,14 @@ The broad target includes, when applicable:
 - dependency/security checks, including configured Gitleaks/CodeQL/Semgrep/Trivy/Sonar gates when applicable;
 - performance/load tests only where the issue creates a relevant risk.
 
+For every applicable material gate, distinguish:
+- **PASS** — executed/observed evidence proves the required result;
+- **FAIL** — executed/observed evidence contradicts the required result;
+- **UNAVAILABLE/UNVERIFIED** — the environment/tool cannot provide the proof; use the strongest safe alternative and report the limitation;
+- **NOT APPLICABLE** — the issue does not touch that surface.
+
+Never convert missing capability, skipped execution, absent CI output or "no contradictory evidence" into a pass.
+
 Tests passing does not by itself mean the issue is done. Acceptance criteria, security, docs and architecture gates must also pass.
 
 ### Phase 13 — Documentation synchronization
@@ -376,10 +393,11 @@ When all required local/agent gates are green and repository credentials/tools a
 4. inspect the GitHub Actions checks that apply to the PR;
 5. if a mandatory CI check fails, return to the recovery loop, make the smallest correct fix, push it and re-check CI;
 6. do not treat a skipped/absent check as proof when the changed component should have been validated by that check;
-7. only after applicable mandatory CI is green, perform the tracker/human handoff;
-8. if Linear access and explicit tracker-status authority are available, attach/link the PR and move the issue to the exact **`In Review`** status; otherwise leave tracker state unchanged and report the handoff;
-9. generate the issue-specific manual validation guide defined in `references/manual-validation.md`;
-10. stop and wait for explicit human acceptance.
+7. before `In Review`, compare the recorded integration base with the current target/base when available. Unrelated base movement keeps unaffected evidence valid; materially relevant changes to code/contracts/dependencies/test definitions require reconciliation and rerunning only the affected checks. Do not auto-rebase/merge merely because the base moved;
+8. only after applicable mandatory CI is green and relevant evidence is fresh, perform the tracker/human handoff;
+9. if Linear access and explicit tracker-status authority are available, attach/link the PR and move the issue to the exact **`In Review`** status; otherwise leave tracker state unchanged and report the handoff;
+10. generate the issue-specific manual validation guide defined in `references/manual-validation.md`;
+11. stop and wait for explicit human acceptance.
 
 Do **not** move the issue to `Done` in this implementation run. Automated success means ready for human review, not human-accepted.
 
@@ -442,7 +460,7 @@ If the human reports a validation failure instead, move the issue back to `In Pr
 
 Follow `references/output-contract.md` for progress updates, failures and the final response.
 
-Keep user-visible output concise and actionable while retaining complete evidence in tests, commits and the PR body.
+**Analyze deeply; report minimally. Compress presentation, never evidence.** Keep durable detail in tests, commits, PR/tracker evidence and generated artifacts when they exist; user-visible output should surface material deltas, failures/risks, state and the next action. Prefer source-side filtering/summarization of routine logs over dumping raw output into the conversation.
 
 ## Anti-rationalization rules
 
