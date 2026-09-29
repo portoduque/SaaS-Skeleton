@@ -1,0 +1,86 @@
+name: Application CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: application-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: CI / Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Java 25
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+          cache-dependency-path: apps/api/pom.xml
+
+      - name: Verify backend
+        working-directory: apps/api
+        run: ./mvnw --batch-mode --no-transfer-progress verify
+
+      - name: Verify backend coverage report
+        working-directory: apps/api
+        run: test -s target/site/jacoco/jacoco.xml
+
+
+  frontend:
+    name: CI / Frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: apps/web
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint frontend
+        working-directory: apps/web
+        run: npm run lint
+
+      - name: Typecheck frontend
+        working-directory: apps/web
+        run: npm run typecheck
+
+      - name: Test frontend
+        working-directory: apps/web
+        run: npm test
+
+      - name: Verify frontend coverage report
+        working-directory: apps/web
+        run: test -s coverage/lcov.info
+
+      - name: Build frontend
+        working-directory: apps/web
+        run: npm run build

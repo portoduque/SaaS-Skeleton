@@ -19,12 +19,20 @@ The project intends to follow Semantic Versioning once releases begin.
 - Aligned contribution and implementation-plan documentation with the human acceptance gate.
 - Added the CI/CD and DevSecOps architecture, incremental rollout and clean-machine README onboarding invariant.
 
+### Application bootstrap
+
+- Added the Java 25 / Spring Boot 4.1.1 backend shell with Maven Wrapper and baseline Spring context verification.
+- Added the Next.js 16.3.6 / React 19.3.0 / TypeScript strict frontend shell with lint, tests, coverage and production build.
+- Added reproducible npm installation through the committed lockfile and documented the supported Node 24 line.
+- Added JaCoCo XML and LCOV coverage generation for independent quality analysis.
+
 ### CI / Security
 
 - Added a foundation GitHub Actions security baseline with Gitleaks, Semgrep CE and Trivy.
-- Added Dependabot coverage for GitHub Actions; Maven/npm/Docker ecosystems are enabled only when their manifests exist.
+- Added Dependabot coverage for GitHub Actions, Maven and npm; Docker coverage remains deferred until Docker manifests exist.
 - Pinned third-party GitHub Actions used by the baseline to immutable commit SHAs.
 - Updated the canonical agent workflow so applicable independent GitHub Actions checks are part of readiness.
+- Added CodeQL for Java/Kotlin and JavaScript/TypeScript plus SonarQube Cloud CI-based Quality Gate analysis.
 
 ### Changed
 
