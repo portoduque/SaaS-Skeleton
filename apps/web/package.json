@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=24"
+    "node": ">=24.15.0 <25"
   },
   "packageManager": "npm@11.19.0",
   "scripts": {
@@ -26,7 +26,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitest/coverage-v8": "5.0.2",
-    "eslint": "^9.0.0",
+    "eslint": "^10.0.0",
     "eslint-config-next": "16.3.6",
     "jsdom": "^30.0.0",
     "typescript": "6.0.3",
