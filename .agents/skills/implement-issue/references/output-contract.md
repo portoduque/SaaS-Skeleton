@@ -1,6 +1,12 @@
 # Implement Issue — Output Contract
 
-User-visible output must make state obvious without narrating every tool call.
+User-visible output must make state obvious without narrating routine tool mechanics.
+
+**Analyze deeply; report minimally. Compress presentation, never evidence.**
+
+Keep detailed evidence where it belongs (tests, CI, commits, PR/tracker comments or an existing durable artifact). In chat, surface only material state, implementation delta, failures/risks, decisions that require the human, and the next concrete action.
+
+Prefer source-side narrowing: extract decisive lines/counts/statuses from large logs instead of pasting raw output. A successful check usually needs one compact result; a failure gets the diagnostic detail needed to act.
 
 ## Progress updates
 
@@ -18,7 +24,7 @@ POR-9 — Step 3/7
 Blockers: none
 ```
 
-Do not flood the user with low-level operational narration.
+Do not flood the user with low-level operational narration. Do not repeat the same successful evidence in multiple sections.
 
 ## Failure updates
 
@@ -103,9 +109,12 @@ The manual section is mandatory for successful completion and must be specific t
 Then, only if useful, add compact evidence groups such as:
 
 - key areas changed;
-- exact validation commands/results;
+- decisive validation results (not raw logs);
 - migration/API/env notes;
+- unresolved risks or unavailable checks;
 - out-of-scope observations.
+
+If the complete manual validation guide already exists in a durable linked location, do not duplicate it in full in chat; give the location plus the first required human action. Otherwise provide the bounded issue-specific guide inline.
 
 ## Final NOT READY output
 
@@ -182,8 +191,11 @@ Do not mix unrelated improvement candidates into one approval request.
 
 ## Style rules
 
-- answer/state first;
+- state/result first;
 - concise headings;
+- successful checks collapse to compact evidence; failures, blockers and material risk expand;
+- state each material fact once;
+- prefer decisive counts/statuses/identifiers over routine logs;
 - numbered steps only when the user must perform multiple actions;
 - make completed work visible;
 - group long lists rather than hiding important items;
@@ -191,4 +203,5 @@ Do not mix unrelated improvement candidates into one approval request.
 - no time estimates for autonomous agent work;
 - successful runs end with a simple issue-specific manual validation path, not with "done";
 - preserve uncertainty when evidence is incomplete;
+- never turn output reduction into reduced validation scope;
 - do not ask the user to do work the agent can perform with available tools.
