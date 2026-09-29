@@ -47,6 +47,10 @@ jobs:
         working-directory: apps/api
         run: ./mvnw --batch-mode --no-transfer-progress verify
 
+      - name: Prepare Java dependency classpath for SonarQube
+        working-directory: apps/api
+        run: ./mvnw --batch-mode --no-transfer-progress dependency:copy-dependencies -DincludeScope=test -DoutputDirectory=target/dependency
+
       - name: Install frontend dependencies
         working-directory: apps/web
         run: npm ci --no-audit --no-fund
