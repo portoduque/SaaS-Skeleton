@@ -156,11 +156,16 @@ Use UUIDv7 for public/domain entity identifiers where practical. This avoids pre
 The API is resource-oriented and consistent across clients.
 
 - use nouns in resource paths;
+- place public application endpoints under `/api/v1`; Actuator and OpenAPI remain operational/contract endpoints outside that namespace;
 - use HTTP status codes semantically;
-- keep one stable structured error format;
+- validate untrusted DTOs and method parameters with Jakarta Bean Validation;
+- return RFC 9457 `application/problem+json` errors with stable `code`, `requestId` and optional sorted `violations` fields;
 - use consistent pagination/filtering conventions;
 - return only fields needed by the contract;
-- treat OpenAPI as the source for generated client types.
+- treat `/v3/api-docs` as the runtime OpenAPI source for generated client types and include only `/api/v1/**` paths;
+- propagate a safe `X-Request-ID` or generate a UUID for every request.
+
+Console logs use Spring Boot's Logstash JSON format. Request completion logs include correlation ID, HTTP method, status and duration, but deliberately omit URLs, query strings, request bodies and headers so future credentials or tokens are not captured accidentally. Actuator exposes only `/actuator/health`, with health details hidden from unauthenticated callers.
 
 Do not add frontend-specific endpoints that embed Next.js assumptions into backend domain logic.
 
