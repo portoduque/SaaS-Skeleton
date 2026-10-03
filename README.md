@@ -247,8 +247,14 @@ Expected result:
 With the persistence stack running, start the API:
 
 ```bash
+# Load the local environment file into this shell. Maven/Spring Boot do not read .env automatically.
+set -a
+source ../../.env
+set +a
 ./mvnw spring-boot:run
 ```
+
+Run these commands from `apps/api`, after creating `../../.env` in the repository root. Do not print or commit the loaded variables.
 
 Expected log:
 
