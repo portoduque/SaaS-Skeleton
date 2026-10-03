@@ -96,6 +96,8 @@ Prefer real PostgreSQL over H2 for database-dependent behavior.
 
 The persistence foundation test starts PostgreSQL 18 and PgBouncer with Testcontainers, boots the application through the proxy, applies Flyway to a clean database and verifies the PostgreSQL version, migration history and `pg_stat_statements` extension. Docker is therefore required for backend `verify`.
 
+The API conventions integration test boots a real local HTTP server without persistence auto-configuration and verifies DTO and method-parameter validation, RFC 9457 error stability, 404 handling, safe request-ID propagation, secret-safe structured request logs, summary-only health and deterministic runtime OpenAPI generation restricted to `/api/v1`. It does not replace the PostgreSQL Testcontainers test; both run during backend `verify`.
+
 ### Data-access performance correctness
 
 Tests/reviews should explicitly watch for:

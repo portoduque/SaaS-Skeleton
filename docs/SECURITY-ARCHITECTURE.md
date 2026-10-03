@@ -106,6 +106,7 @@ Rules:
 - production secrets are injected through the deployment environment/secret facility;
 - runtime should fail clearly when mandatory secrets are missing;
 - logs must not include passwords, reset/verification tokens, session identifiers, API keys or unnecessary personal data;
+- baseline HTTP completion logs record only request ID, method, status and duration; request paths, query strings, bodies, authorization headers and raw exception messages are excluded;
 - if a secret is exposed, rotate it and review history/similar locations rather than merely deleting the current line.
 
 ## CI/CD trust boundary

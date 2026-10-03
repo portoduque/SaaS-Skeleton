@@ -2,7 +2,7 @@
 
 Open-source SaaS starter focused on **security, performance, modularity, frontend independence and easy future scalability** — without overengineering.
 
-> Current state: **Phase 2 / persistence foundation**. Spring Boot and Next.js are runnable, PostgreSQL/PgBouncer/Flyway are integrated, and later phases add authentication, organizations, tenant isolation, generated API clients, deployment and final hardening.
+> Current state: **Phase 3 / API and observability baseline**. Spring Boot and Next.js are runnable; PostgreSQL/PgBouncer/Flyway are integrated; and the backend now provides versioned API conventions, validation errors, request correlation, structured logs, health and OpenAPI. Later phases add authentication, organizations, tenant isolation, generated API clients, deployment and final hardening.
 
 ## What is already working
 
@@ -13,6 +13,9 @@ The current repository contains:
 - Maven Wrapper 3.3.4 using Maven 3.9.16;
 - reproducible npm install through `package-lock.json`;
 - PostgreSQL 18.1, PgBouncer 1.24.1 and Flyway migrations;
+- `/api/v1` public API convention with Bean Validation and RFC 9457 error responses;
+- request correlation through `X-Request-ID` and structured Logstash JSON console logs;
+- Spring Boot Actuator health and runtime-generated OpenAPI contract;
 - Docker Compose persistence stack with private PostgreSQL and localhost-only PgBouncer;
 - JUnit/Testcontainers integration test against real PostgreSQL through PgBouncer;
 - Vitest + React Testing Library frontend tests;
@@ -84,7 +87,7 @@ Other integrations +
 ### Planned by later phases
 
 - Spring Security;
-- OpenAPI + generated TypeScript client;
+- generated TypeScript client from OpenAPI;
 - Tailwind CSS + shadcn/ui + Lucide;
 - TanStack Query + React Hook Form + Zod;
 - Playwright;
@@ -263,6 +266,23 @@ Started SaasSkeletonApplication
 ```
 
 The application listens on Spring Boot's default port `8080`. There are intentionally no product API endpoints yet, so receiving `404` at `/` is expected.
+
+In another terminal, verify the operational and API-contract endpoints:
+
+```bash
+curl --fail-with-body http://localhost:8080/actuator/health
+curl --fail-with-body http://localhost:8080/v3/api-docs
+curl --include -H 'X-Request-ID: manual-check-1' http://localhost:8080/api/v1/not-found
+```
+
+Expected results:
+
+- health reports `"status":"UP"` without component details (Actuator may also list the `liveness` and `readiness` group names);
+- OpenAPI returns title `SaaS-Skeleton API`, version `v1`, and only documents paths under `/api/v1`;
+- the missing resource returns HTTP `404`, `application/problem+json`, error code `NOT_FOUND`, and echoes `X-Request-ID: manual-check-1` in both the response header and body;
+- the API terminal prints one-line JSON logs containing `requestId`, method, status and duration, without request bodies, authorization headers or exception messages.
+
+API request DTOs use Jakarta Bean Validation. Validation failures use the same RFC 9457 response and add a deterministic `violations` array. New controllers must use the `dev.portoduque.saas.shared.api.ApiPaths.V1` prefix (or a path beginning with the same `/api/v1` value); only that namespace is included in the public OpenAPI contract.
 
 Stop it with `Ctrl+C`.
 
