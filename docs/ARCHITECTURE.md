@@ -117,6 +117,18 @@ This avoids storing sensitive bearer tokens in browser storage and permits horiz
 
 The authentication domain must not be coupled to browser-only behavior. OAuth2/OIDC token flows for future mobile/desktop clients can be introduced later without changing core users/organizations/business modules.
 
+Implemented authentication flow:
+
+- normalized unique e-mail identities with UUIDv7 public identifiers;
+- Argon2id password hashes (plaintext credentials are never persisted or returned);
+- explicit CSRF token acquisition followed by JSON registration/login/logout endpoints;
+- session fixation protection on login and JDBC-backed session invalidation on logout;
+- `HttpOnly`, `SameSite=Lax` cookies, with `Secure` enabled by default and disabled only by the documented local HTTP environment;
+- hashed, expiring and one-time verification/reset token records;
+- PostgreSQL-backed fixed-window counters for abuse-sensitive actions so limits are shared by future API replicas.
+
+Token delivery is deliberately outside the current core: POR-9 establishes the secure lifecycle and persistence model without selecting an e-mail provider.
+
 ## Multi-tenancy
 
 Initial model is shared database/shared schema.

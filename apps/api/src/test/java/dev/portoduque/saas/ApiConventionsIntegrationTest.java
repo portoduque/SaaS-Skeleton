@@ -1,4 +1,4 @@
-package dev.portoduque.saas;
+package dev.portoduque.saas.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -19,7 +19,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -38,7 +44,10 @@ import tools.jackson.databind.ObjectMapper;
                     + "org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,"
                     + "org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration"
         })
-@Import(ApiConventionsIntegrationTest.ContractTestController.class)
+@Import({
+    ApiConventionsIntegrationTest.ContractTestController.class,
+    ApiConventionsIntegrationTest.ContractTestSecurityConfiguration.class
+})
 @ExtendWith(OutputCaptureExtension.class)
 class ApiConventionsIntegrationTest {
 
@@ -50,6 +59,18 @@ class ApiConventionsIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockitoBean
+    private AuthService authService;
+
+    @MockitoBean
+    private AuthSessionService authSessionService;
+
+    @MockitoBean
+    private AuthRateLimiter authRateLimiter;
+
+    @MockitoBean
+    private UserAccountDetailsService userAccountDetailsService;
 
     @Test
     void returns_deterministic_openapi_contract_for_versioned_api() throws Exception {
@@ -190,4 +211,17 @@ class ApiConventionsIntegrationTest {
     }
 
     record ContractRequest(@NotBlank String name, String password) {}
+
+    @TestConfiguration(proxyBeanMethods = false)
+    static class ContractTestSecurityConfiguration {
+
+        @Bean
+        @Order(0)
+        SecurityFilterChain contractTestSecurityFilterChain(HttpSecurity http) throws Exception {
+            http.securityMatcher(ApiPaths.V1 + "/**")
+                    .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll())
+                    .csrf(csrf -> csrf.disable());
+            return http.build();
+        }
+    }
 }
