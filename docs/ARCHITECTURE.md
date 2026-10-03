@@ -146,7 +146,9 @@ Use UUIDv7 for public/domain entity identifiers where practical. This avoids pre
 - PgBouncer between application and PostgreSQL;
 - constraints and foreign keys enforce integrity;
 - indexes are added from query requirements, not speculation;
-- `pg_stat_statements` is enabled when the production environment is introduced.
+- PostgreSQL preloads `pg_stat_statements`, and Flyway enables the extension in each migrated database.
+- PostgreSQL is not published to the host; the local PgBouncer port binds only to `127.0.0.1`.
+- The application connects through PgBouncer, including migration startup.
 
 
 ## API conventions

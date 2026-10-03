@@ -94,6 +94,8 @@ Use Spring Boot + Testcontainers + PostgreSQL for:
 
 Prefer real PostgreSQL over H2 for database-dependent behavior.
 
+The persistence foundation test starts PostgreSQL 18 and PgBouncer with Testcontainers, boots the application through the proxy, applies Flyway to a clean database and verifies the PostgreSQL version, migration history and `pg_stat_statements` extension. Docker is therefore required for backend `verify`.
+
 ### Data-access performance correctness
 
 Tests/reviews should explicitly watch for:
@@ -156,6 +158,8 @@ Prefer condition-based waits/locators over arbitrary sleep/timeouts. Preserve tr
 ## Migration validation
 
 Every schema change requires a Flyway migration and integration validation against a clean PostgreSQL database.
+
+For the local Compose stack, run `scripts/verify-database-persistence.sh` after the API has applied migrations. It recreates the database containers without deleting the named volume and confirms that Flyway history remains available through PgBouncer.
 
 Already-applied versioned migrations must not be edited casually. Fix forward with a new migration.
 
