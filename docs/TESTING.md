@@ -98,6 +98,8 @@ The persistence foundation test starts PostgreSQL 18 and PgBouncer with Testcont
 
 The API conventions integration test boots a real local HTTP server without persistence auto-configuration and verifies DTO and method-parameter validation, RFC 9457 error stability, 404 handling, safe request-ID propagation, secret-safe structured request logs, summary-only health and deterministic runtime OpenAPI generation restricted to `/api/v1`. It does not replace the PostgreSQL Testcontainers test; both run during backend `verify`.
 
+The authentication integration test runs the API through real PostgreSQL 18 and PgBouncer. It verifies UUIDv7/Argon2id registration, duplicate identity handling, CSRF allow/deny behavior, secure cookie attributes, session fixation rotation, JDBC persistence, logout invalidation, safe authentication errors, persistent rate limiting and hashed/expiring/single-use verification/reset tokens.
+
 ### Data-access performance correctness
 
 Tests/reviews should explicitly watch for:

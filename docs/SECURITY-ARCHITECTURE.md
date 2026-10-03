@@ -57,6 +57,10 @@ Web defaults:
 - short-lived, one-time password reset tokens;
 - e-mail verification flow.
 
+Current implementation uses UUIDv7 user IDs, normalized unique e-mail identities and Argon2id hashes. Spring Session JDBC stores sessions in PostgreSQL, login changes the session ID, logout invalidates it, and password reset invalidates active sessions for the affected identity. CSRF tokens are session-backed and must be refreshed after login/logout.
+
+Verification/reset tokens contain 256 bits of randomness, are stored only as SHA-256 hashes, expire, and are consumed under a database lock so a successful token cannot be reused. An e-mail delivery provider is not selected by the authentication core.
+
 Do not store long-lived authentication tokens in browser `localStorage` by default.
 
 Authentication infrastructure must remain separable from domain logic so OAuth2/OIDC/Bearer flows can be added for future mobile/desktop clients without rewriting users/organizations/business modules.
@@ -143,6 +147,8 @@ At minimum, design for stronger controls on abuse-sensitive endpoints such as:
 - e-mail verification resend.
 
 Implementation is introduced in the relevant authentication phase and must remain replaceable if distributed rate limiting is needed later.
+
+The current baseline stores bounded per-action/per-identity counters in PostgreSQL. Identities are SHA-256 hashed before storage, counters are shared across application replicas, and successful login clears its failure counter. This avoids per-process correctness and does not introduce Redis before measured scale requires it.
 
 ## Dependency and supply-chain security
 

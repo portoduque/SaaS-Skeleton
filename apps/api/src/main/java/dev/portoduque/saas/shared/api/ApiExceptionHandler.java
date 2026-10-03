@@ -89,6 +89,17 @@ final class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problem);
     }
 
+    @ExceptionHandler(ApiProblemException.class)
+    ResponseEntity<Object> handleApiProblem(ApiProblemException exception, WebRequest request) {
+        ProblemDetail problem = problem(
+                exception.status(),
+                exception.code(),
+                exception.title(),
+                exception.safeDetail(),
+                request);
+        return ResponseEntity.status(exception.status()).body(problem);
+    }
+
     private static ProblemDetail genericProblem(HttpStatusCode status, WebRequest request) {
         return switch (status.value()) {
             case 404 -> problem(

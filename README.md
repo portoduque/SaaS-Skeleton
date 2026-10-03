@@ -2,7 +2,7 @@
 
 Open-source SaaS starter focused on **security, performance, modularity, frontend independence and easy future scalability** — without overengineering.
 
-> Current state: **Phase 3 / API and observability baseline**. Spring Boot and Next.js are runnable; PostgreSQL/PgBouncer/Flyway are integrated; and the backend now provides versioned API conventions, validation errors, request correlation, structured logs, health and OpenAPI. Later phases add authentication, organizations, tenant isolation, generated API clients, deployment and final hardening.
+> Current state: **Phase 4 / users and authentication core**. The backend provides PostgreSQL-backed users and sessions, Argon2id passwords, CSRF-protected registration/login/logout, UUIDv7 identifiers, verification/reset token models and persistent abuse-sensitive rate limiting. Later phases add organizations, tenant isolation, generated API clients, UI flows, deployment and final hardening.
 
 ## What is already working
 
@@ -16,6 +16,10 @@ The current repository contains:
 - `/api/v1` public API convention with Bean Validation and RFC 9457 error responses;
 - request correlation through `X-Request-ID` and structured Logstash JSON console logs;
 - Spring Boot Actuator health and runtime-generated OpenAPI contract;
+- Spring Security with PostgreSQL-backed Spring Session JDBC;
+- UUIDv7 users, Argon2id password hashing and CSRF-protected registration/login/logout;
+- hashed, expiring, one-time e-mail verification and password-reset token models;
+- PostgreSQL-backed rate limiting for abuse-sensitive authentication actions;
 - Docker Compose persistence stack with private PostgreSQL and localhost-only PgBouncer;
 - JUnit/Testcontainers integration test against real PostgreSQL through PgBouncer;
 - Vitest + React Testing Library frontend tests;
@@ -73,6 +77,7 @@ Other integrations +
 | --- | --- |
 | Backend | Java 25, Spring Boot 4.1.1, Maven Wrapper |
 | Database | PostgreSQL 18.1, PgBouncer 1.24.1, Flyway |
+| Authentication | Spring Security, Spring Session JDBC, Argon2id, secure cookie sessions |
 | Frontend | Next.js 16.3.6, React 19.3.0, TypeScript 6.0.3 |
 | Frontend tests | Vitest 5.0.2, Testing Library, jsdom |
 | Lint | ESLint 9.39.5 + eslint-config-next 16.3.6 |
@@ -86,7 +91,6 @@ Other integrations +
 
 ### Planned by later phases
 
-- Spring Security;
 - generated TypeScript client from OpenAPI;
 - Tailwind CSS + shadcn/ui + Lucide;
 - TanStack Query + React Hook Form + Zod;
@@ -211,6 +215,8 @@ cp .env.example .env
 
 Never commit `.env`. The application role and PostgreSQL administrator intentionally use separate credentials.
 
+The template sets `SESSION_COOKIE_SECURE=false` only because the documented local API uses plain HTTP. Set it to `true` in every HTTPS, staging or production environment.
+
 Start the persistence stack from the repository root:
 
 ```bash
@@ -265,7 +271,7 @@ Expected log:
 Started SaasSkeletonApplication
 ```
 
-The application listens on Spring Boot's default port `8080`. There are intentionally no product API endpoints yet, so receiving `404` at `/` is expected.
+The application listens on Spring Boot's default port `8080`. Receiving `404` at `/` is expected; application APIs live under `/api/v1`.
 
 In another terminal, verify the operational and API-contract endpoints:
 
@@ -283,6 +289,59 @@ Expected results:
 - the API terminal prints one-line JSON logs containing `requestId`, method, status and duration, without request bodies, authorization headers or exception messages.
 
 API request DTOs use Jakarta Bean Validation. Validation failures use the same RFC 9457 response and add a deterministic `violations` array. New controllers must use the `dev.portoduque.saas.shared.api.ApiPaths.V1` prefix (or a path beginning with the same `/api/v1` value); only that namespace is included in the public OpenAPI contract.
+
+### Exercise registration, login and logout
+
+Browser-session mutations require a CSRF token. Keep the session cookie and refresh the token after login or logout because Spring Security rotates the session protection state.
+
+```bash
+# 1. Create an anonymous session and copy the `token` value from the JSON response.
+curl --fail-with-body -c /tmp/saas-skeleton-cookies \
+  http://localhost:8080/api/v1/auth/csrf
+
+CSRF_TOKEN='paste-the-token-value-here'
+
+# 2. Register a local test account. Passwords must contain 12 to 128 characters.
+curl --fail-with-body -i \
+  -b /tmp/saas-skeleton-cookies -c /tmp/saas-skeleton-cookies \
+  -H 'Content-Type: application/json' \
+  -H "X-CSRF-TOKEN: $CSRF_TOKEN" \
+  --data '{"email":"manual@example.com","password":"local-test-password"}' \
+  http://localhost:8080/api/v1/auth/registrations
+
+# 3. Log in. The session ID changes after successful authentication.
+curl --fail-with-body -i \
+  -b /tmp/saas-skeleton-cookies -c /tmp/saas-skeleton-cookies \
+  -H 'Content-Type: application/json' \
+  -H "X-CSRF-TOKEN: $CSRF_TOKEN" \
+  --data '{"email":"manual@example.com","password":"local-test-password"}' \
+  http://localhost:8080/api/v1/auth/sessions
+
+# 4. Refresh CSRF after login and copy the new token.
+curl --fail-with-body -b /tmp/saas-skeleton-cookies -c /tmp/saas-skeleton-cookies \
+  http://localhost:8080/api/v1/auth/csrf
+
+CSRF_TOKEN='paste-the-new-token-value-here'
+
+# 5. Read the authenticated session, then log out.
+curl --fail-with-body -b /tmp/saas-skeleton-cookies \
+  http://localhost:8080/api/v1/auth/session
+curl --fail-with-body -i -X DELETE \
+  -b /tmp/saas-skeleton-cookies -c /tmp/saas-skeleton-cookies \
+  -H "X-CSRF-TOKEN: $CSRF_TOKEN" \
+  http://localhost:8080/api/v1/auth/session
+```
+
+Expected results:
+
+- registration returns `201` with UUIDv7, normalized e-mail and `emailVerified: false`, never a password/hash;
+- login returns `200` and rotates the `SAAS_SESSION` cookie;
+- the session endpoint returns the authenticated user before logout;
+- logout returns `204`, invalidates the JDBC session and subsequent session reads return `401`;
+- omitting or reusing an invalidated CSRF token on a state-changing request returns a safe RFC 9457 `403` response;
+- repeated failed login attempts return `429` after the configured baseline limit.
+
+Verification/reset tokens are random, stored only as SHA-256 hashes, expire and are single-use. POR-9 intentionally provides the backend token lifecycle model but does not choose an e-mail provider; delivery integration and public verification/reset flows remain separate from the authentication core.
 
 Stop it with `Ctrl+C`.
 

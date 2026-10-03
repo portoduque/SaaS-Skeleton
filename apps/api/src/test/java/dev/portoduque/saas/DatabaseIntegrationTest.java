@@ -88,10 +88,26 @@ class DatabaseIntegrationTest {
                 "select extname from pg_extension where extname = 'pg_stat_statements'", String.class);
         List<String> successfulMigrations = jdbcTemplate.queryForList(
                 "select version from flyway_schema_history where success order by installed_rank", String.class);
+        List<String> authenticationTables = jdbcTemplate.queryForList(
+                """
+                select table_name
+                  from information_schema.tables
+                 where table_schema = 'public'
+                   and table_name in ('users', 'auth_tokens', 'auth_rate_limits', 'spring_session', 'spring_session_attributes')
+                 order by table_name
+                """,
+                String.class);
 
         assertThat(serverVersion).isGreaterThanOrEqualTo(180000);
         assertThat(installedExtensions).containsExactly("pg_stat_statements");
-        assertThat(successfulMigrations).containsExactly("1");
+        assertThat(successfulMigrations).containsExactly("1", "2");
+        assertThat(authenticationTables)
+                .containsExactly(
+                        "auth_rate_limits",
+                        "auth_tokens",
+                        "spring_session",
+                        "spring_session_attributes",
+                        "users");
         try (var connection = dataSource.getConnection()) {
             assertThat(connection.getMetaData().getURL())
                     .contains(":" + PGBOUNCER.getMappedPort(6432) + "/")
