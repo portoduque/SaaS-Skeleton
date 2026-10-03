@@ -2,7 +2,7 @@
 
 Open-source SaaS starter focused on **security, performance, modularity, frontend independence and easy future scalability** — without overengineering.
 
-> Current state: **Phase 1 / developer bootstrap**. Spring Boot and Next.js are runnable, the first application CI gates are active, and later phases add PostgreSQL, authentication, organizations, tenant isolation, generated API clients, deployment and final hardening.
+> Current state: **Phase 2 / persistence foundation**. Spring Boot and Next.js are runnable, PostgreSQL/PgBouncer/Flyway are integrated, and later phases add authentication, organizations, tenant isolation, generated API clients, deployment and final hardening.
 
 ## What is already working
 
@@ -12,16 +12,18 @@ The current repository contains:
 - Next.js 16.3.6 + React 19.3.0 + TypeScript strict frontend shell;
 - Maven Wrapper 3.3.4 using Maven 3.9.16;
 - reproducible npm install through `package-lock.json`;
-- JUnit/Spring context test;
+- PostgreSQL 18.1, PgBouncer 1.24.1 and Flyway migrations;
+- Docker Compose persistence stack with private PostgreSQL and localhost-only PgBouncer;
+- JUnit/Testcontainers integration test against real PostgreSQL through PgBouncer;
 - Vitest + React Testing Library frontend tests;
 - JaCoCo XML + LCOV coverage reports;
 - backend and frontend GitHub Actions CI;
 - Gitleaks, Semgrep CE and Trivy security checks;
 - CodeQL for Java/Kotlin and JavaScript/TypeScript;
 - SonarQube Cloud Quality Gate integration;
-- Dependabot for GitHub Actions, Maven and npm.
+- Dependabot for GitHub Actions, Maven, npm and Docker images.
 
-PostgreSQL, PgBouncer, Flyway and Docker Compose runtime services are intentionally introduced in the next implementation phase. Do not expect `docker compose up` to run the application yet.
+Docker Compose currently runs the persistence services only. Run the Spring Boot API and Next.js development server from their application directories.
 
 ## Principles
 
@@ -67,6 +69,7 @@ Other integrations +
 | Area | Technology |
 | --- | --- |
 | Backend | Java 25, Spring Boot 4.1.1, Maven Wrapper |
+| Database | PostgreSQL 18.1, PgBouncer 1.24.1, Flyway |
 | Frontend | Next.js 16.3.6, React 19.3.0, TypeScript 6.0.3 |
 | Frontend tests | Vitest 5.0.2, Testing Library, jsdom |
 | Lint | ESLint 9.39.5 + eslint-config-next 16.3.6 |
@@ -80,17 +83,11 @@ Other integrations +
 
 ### Planned by later phases
 
-- PostgreSQL 18;
-- PgBouncer;
-- Flyway;
 - Spring Security;
-- Spring Data JPA / Hibernate;
 - OpenAPI + generated TypeScript client;
 - Tailwind CSS + shadcn/ui + Lucide;
 - TanStack Query + React Hook Form + Zod;
-- Testcontainers;
 - Playwright;
-- Docker Compose;
 - Caddy;
 - external database backups;
 - OWASP ZAP final dynamic validation.
@@ -127,7 +124,13 @@ SaaS-Skeleton/
 │       ├── package-lock.json
 │       ├── tsconfig.json
 │       └── vitest.config.mts
+├── infra/
+│   ├── pgbouncer/
+│   └── postgres/
+├── scripts/
+│   └── verify-database-persistence.sh
 ├── docs/
+├── compose.yaml
 ├── .env.example
 ├── .semgrep.yml
 ├── sonar-project.properties
@@ -145,16 +148,16 @@ This section is intentionally sequential. A new contributor should be able to st
 
 ## 1. Install prerequisites
 
-Required for the current Phase 1 repository:
+Required for the current repository:
 
 - **Git**;
 - **Java 25** — Eclipse Temurin is the CI distribution;
 - **Node.js 24.15.0 or newer within the 24.x line**;
-- **npm 11.19.0** for the canonical tested setup.
+- **npm 11.19.0** for the canonical tested setup;
+- **Docker Engine with Docker Compose** for the persistence stack and backend integration tests.
 
 Optional but recommended:
 
-- **Docker** — needed only to run Gitleaks/Semgrep/Trivy locally using the same simple containerized approach documented below;
 - a GitHub account — needed only if you intend to push a fork/repository and use CI;
 - a SonarQube Cloud account — needed only to reproduce the canonical Sonar integration in your own repository.
 
@@ -174,6 +177,8 @@ git --version
 java --version
 node --version
 npm --version
+docker --version
+docker compose version
 ```
 
 Expected minimums:
@@ -195,11 +200,22 @@ cd SaaS-Skeleton
 
 ## 3. Environment variables
 
-Phase 1 does not require runtime environment variables yet.
+Copy the committed template and replace both placeholder passwords with local-only values:
 
-`.env.example` exists as the canonical future template, but there is nothing you need to copy or edit to run the current backend/frontend shells.
+```bash
+cp .env.example .env
+```
 
-When later phases add PostgreSQL, authentication or other runtime configuration, this section and `.env.example` must be updated in the same change.
+Never commit `.env`. The application role and PostgreSQL administrator intentionally use separate credentials.
+
+Start the persistence stack from the repository root:
+
+```bash
+docker compose up -d --wait postgres pgbouncer
+docker compose ps
+```
+
+PostgreSQL has no host port. PgBouncer is reachable only at `127.0.0.1:6432`; the backend must connect through it. The named `postgres_data` volume preserves database state across normal container recreation.
 
 ## 4. Verify the backend
 
@@ -223,15 +239,22 @@ Expected result:
 
 - Maven downloads the pinned distribution automatically on first use;
 - Java 25 is detected;
-- the Spring Boot context test passes;
+- the Testcontainers integration test starts real PostgreSQL and PgBouncer;
+- Flyway creates and validates the initial migration through PgBouncer;
 - the command exits with code `0`;
 - JaCoCo generates `apps/api/target/site/jacoco/jacoco.xml`.
 
-To start the API shell:
+With the persistence stack running, start the API:
 
 ```bash
+# Load the local environment file into this shell. Maven/Spring Boot do not read .env automatically.
+set -a
+source ../../.env
+set +a
 ./mvnw spring-boot:run
 ```
+
+Run these commands from `apps/api`, after creating `../../.env` in the repository root. Do not print or commit the loaded variables.
 
 Expected log:
 
@@ -239,7 +262,7 @@ Expected log:
 Started SaasSkeletonApplication
 ```
 
-The application listens on Spring Boot's default port `8080`. There are intentionally no product API endpoints yet, so receiving `404` at `/` is expected in Phase 1.
+The application listens on Spring Boot's default port `8080`. There are intentionally no product API endpoints yet, so receiving `404` at `/` is expected.
 
 Stop it with `Ctrl+C`.
 
@@ -299,16 +322,30 @@ cd apps/web
 npm run dev
 ```
 
-Current Phase 1 behavior:
+Current behavior:
 
 ```text
 Next.js:    http://localhost:3000
 Spring:     http://localhost:8080
-Database:   not introduced yet
+Database:   PostgreSQL through PgBouncer at 127.0.0.1:6432
 API bridge: not introduced yet
 ```
 
 The frontend must not access PostgreSQL directly. Later integration is always through the Spring Boot API.
+
+## Database migrations and persistence
+
+Flyway is the only schema mutation mechanism. Hibernate runs with `ddl-auto=validate`; never edit an applied versioned migration. Add a new forward migration under `apps/api/src/main/resources/db/migration` instead.
+
+`docker compose down` removes containers and networks but preserves `postgres_data`. `docker compose down -v` also deletes the database volume and must be used only when intentionally resetting local data.
+
+After the API has started once and applied its migrations, verify that migration history survives container recreation:
+
+```bash
+./scripts/verify-database-persistence.sh
+```
+
+The production-like PostgreSQL configuration preloads `pg_stat_statements`, and the initial Flyway migration enables the extension for query-performance evidence.
 
 # Local verification
 
@@ -430,7 +467,8 @@ No manual token is required.
 
 - GitHub Actions;
 - Maven in `/apps/api`;
-- npm in `/apps/web`.
+- npm in `/apps/web`;
+- Docker images in `/compose.yaml`.
 
 Dependency PRs are not auto-merged.
 
@@ -728,7 +766,7 @@ Workflow improvements may be proposed from real evidence, but changes to the can
 
 # Roadmap note
 
-Later phases add the one-command Docker Compose onboarding described by the architecture. Until PostgreSQL/PgBouncer/Flyway and runtime containers exist, the correct Phase 1 local flow is the explicit backend/frontend setup documented above.
+The current Compose stack provides PostgreSQL and PgBouncer. Later phases add application containers, Caddy and the production reference topology; until then, run the persistence services with Compose and the backend/frontend through their documented development commands.
 
 # License
 

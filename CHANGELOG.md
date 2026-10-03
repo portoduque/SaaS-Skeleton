@@ -9,6 +9,8 @@ The project intends to follow Semantic Versioning once releases begin.
 ### Added
 
 - Initial project specification and architecture documentation.
+- Added PostgreSQL 18, PgBouncer and Flyway with a private-by-default Docker Compose topology, persistent data volume and `pg_stat_statements`.
+- Added a Testcontainers integration test for clean Flyway migration and backend connectivity through PgBouncer, plus a local persistence verification script.
 
 ### Documentation
 
@@ -30,7 +32,7 @@ The project intends to follow Semantic Versioning once releases begin.
 ### CI / Security
 
 - Added a foundation GitHub Actions security baseline with Gitleaks, Semgrep CE and Trivy.
-- Added Dependabot coverage for GitHub Actions, Maven and npm; Docker coverage remains deferred until Docker manifests exist.
+- Added Dependabot coverage for GitHub Actions, Maven, npm and Docker images.
 - Pinned third-party GitHub Actions used by the baseline to immutable commit SHAs.
 - Updated the canonical agent workflow so applicable independent GitHub Actions checks are part of readiness.
 - Added CodeQL for Java/Kotlin and JavaScript/TypeScript plus SonarQube Cloud CI-based Quality Gate analysis.
