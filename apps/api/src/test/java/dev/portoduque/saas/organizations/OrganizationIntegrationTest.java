@@ -180,6 +180,57 @@ class OrganizationIntegrationTest {
     }
 
     @Test
+    void denies_every_supported_cross_tenant_read_and_write_without_changing_target_data() throws Exception {
+        SessionClient tenantAOwner = registeredClient("tenant-a-owner@example.com");
+        SessionClient tenantBOwner = registeredClient("tenant-b-owner@example.com");
+        registeredClient("tenant-b-member@example.com");
+
+        String tenantAId = body(tenantAOwner.post(
+                        "/api/v1/organizations", "{\"name\":\"Tenant A\"}"), 201)
+                .path("id")
+                .asText();
+        String tenantBId = body(tenantBOwner.post(
+                        "/api/v1/organizations", "{\"name\":\"Tenant B\"}"), 201)
+                .path("id")
+                .asText();
+        JsonNode tenantBMembership = body(tenantBOwner.post(
+                "/api/v1/organizations/" + tenantBId + "/memberships",
+                "{\"email\":\"tenant-b-member@example.com\",\"role\":\"MEMBER\"}"), 201);
+
+        assertProblem(tenantAOwner.get("/api/v1/organizations/" + tenantBId), 404, "ORGANIZATION_NOT_FOUND");
+        assertProblem(tenantAOwner.get(
+                "/api/v1/organizations/" + tenantBId + "/memberships?page=0&size=10"), 404,
+                "ORGANIZATION_NOT_FOUND");
+        assertProblem(tenantAOwner.put(
+                "/api/v1/organization-selection",
+                "{\"organizationId\":\"" + tenantBId + "\"}"), 404, "ORGANIZATION_NOT_FOUND");
+        assertProblem(tenantAOwner.post(
+                "/api/v1/organizations/" + tenantBId + "/memberships",
+                "{\"email\":\"tenant-b-member@example.com\",\"role\":\"ADMIN\"}"), 404,
+                "ORGANIZATION_NOT_FOUND");
+        assertProblem(tenantAOwner.patch(
+                "/api/v1/organizations/" + tenantBId + "/memberships/"
+                        + tenantBMembership.path("id").asText(),
+                "{\"role\":\"ADMIN\"}"), 404, "ORGANIZATION_NOT_FOUND");
+        assertProblem(tenantAOwner.delete(
+                "/api/v1/organizations/" + tenantBId + "/memberships/"
+                        + tenantBMembership.path("id").asText()), 404, "ORGANIZATION_NOT_FOUND");
+        assertProblem(tenantAOwner.patch(
+                "/api/v1/organizations/" + tenantAId + "/memberships/"
+                        + tenantBMembership.path("id").asText(),
+                "{\"role\":\"ADMIN\"}"), 404, "MEMBERSHIP_NOT_FOUND");
+
+        JsonNode tenantBMembers = body(tenantBOwner.get(
+                "/api/v1/organizations/" + tenantBId + "/memberships?page=0&size=10"), 200);
+        assertThat(tenantBMembers.path("totalElements").asInt()).isEqualTo(2);
+        assertThat(java.util.stream.StreamSupport.stream(
+                        tenantBMembers.path("content").spliterator(), false)
+                .map(member -> member.path("role").asText())
+                .toList())
+                .containsExactlyInAnyOrder("OWNER", "MEMBER");
+    }
+
+    @Test
     void rejects_unauthenticated_and_invalid_requests_without_leaking_details() throws Exception {
         SessionClient anonymous = new SessionClient();
         assertProblem(anonymous.get("/api/v1/organizations?page=0&size=10"), 401, "UNAUTHENTICATED");

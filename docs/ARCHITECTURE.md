@@ -145,7 +145,9 @@ Membership binds a user to an organization and role.
 
 The implemented roles are `OWNER`, `ADMIN` and `MEMBER`. Creating an organization atomically creates its single owner membership. Membership collections are paginated; only `OWNER` may add users, change non-owner roles or remove non-owner memberships. The selected organization is stored in the shared JDBC-backed HTTP session and revalidated against current membership whenever it is read.
 
-Future tenant-owned tables include `organization_id` and are always queried through authorized tenant context.
+Tenant repository interfaces extend Spring Data's marker `Repository` and expose only the operations required by the feature instead of inheriting unscoped `findAll`, `findById` or identifier-only delete methods. Services resolve membership before reading or mutating organization-owned state, then use the authorized organization from that membership. A structural test protects the repository surface, while HTTP integration tests prove that every supported cross-tenant read/write path is denied.
+
+Future tenant-owned tables include `organization_id` and follow the same allowlisted-repository and authorized-context convention.
 
 The client-provided organization identifier is not sufficient authorization.
 
