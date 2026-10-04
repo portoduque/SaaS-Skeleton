@@ -12,6 +12,7 @@ The project intends to follow Semantic Versioning once releases begin.
 - Added PostgreSQL 18, PgBouncer and Flyway with a private-by-default Docker Compose topology, persistent data volume and `pg_stat_statements`.
 - Added a Testcontainers integration test for clean Flyway migration and backend connectivity through PgBouncer, plus a local persistence verification script.
 - Added the core user and authentication foundation: UUIDv7 users, Argon2id password hashing, PostgreSQL-backed sessions, CSRF-protected registration/login/logout, hashed expiring one-time verification/reset tokens and persistent rate limiting.
+- Added organizations and memberships with UUIDv7 identifiers, owner/admin/member roles, backend-enforced membership administration, paginated reads and JDBC-session organization selection.
 
 ### Documentation
 

@@ -2,7 +2,7 @@
 
 Open-source SaaS starter focused on **security, performance, modularity, frontend independence and easy future scalability** — without overengineering.
 
-> Current state: **Phase 4 / users and authentication core**. The backend provides PostgreSQL-backed users and sessions, Argon2id passwords, CSRF-protected registration/login/logout, UUIDv7 identifiers, verification/reset token models and persistent abuse-sensitive rate limiting. Later phases add organizations, tenant isolation, generated API clients, UI flows, deployment and final hardening.
+> Current state: **Phase 5 / organizations and memberships**. The backend provides the authentication core plus PostgreSQL-backed organizations, owner/admin/member roles, membership management and server-side organization selection. Later phases harden tenant context for organization-owned resources and add generated API clients, UI flows, deployment and final hardening.
 
 ## What is already working
 
@@ -20,6 +20,8 @@ The current repository contains:
 - UUIDv7 users, Argon2id password hashing and CSRF-protected registration/login/logout;
 - hashed, expiring, one-time e-mail verification and password-reset token models;
 - PostgreSQL-backed rate limiting for abuse-sensitive authentication actions;
+- UUIDv7 organizations and memberships with `OWNER`, `ADMIN` and `MEMBER` roles;
+- backend-enforced membership management, organization-scoped access and server-side organization selection;
 - Docker Compose persistence stack with private PostgreSQL and localhost-only PgBouncer;
 - JUnit/Testcontainers integration test against real PostgreSQL through PgBouncer;
 - Vitest + React Testing Library frontend tests;
@@ -342,6 +344,42 @@ Expected results:
 - repeated failed login attempts return `429` after the configured baseline limit.
 
 Verification/reset tokens are random, stored only as SHA-256 hashes, expire and are single-use. POR-9 intentionally provides the backend token lifecycle model but does not choose an e-mail provider; delivery integration and public verification/reset flows remain separate from the authentication core.
+
+### Exercise organizations and memberships
+
+Keep the authenticated cookie jar and refreshed `CSRF_TOKEN` from the authentication flow above.
+
+```bash
+# Create an organization. Its creator becomes the immutable OWNER.
+curl --fail-with-body -i \
+  -b /tmp/saas-skeleton-cookies -c /tmp/saas-skeleton-cookies \
+  -H 'Content-Type: application/json' \
+  -H "X-CSRF-TOKEN: $CSRF_TOKEN" \
+  --data '{"name":"Manual Organization"}' \
+  http://localhost:8080/api/v1/organizations
+
+# List every organization available to the authenticated user.
+curl --fail-with-body -b /tmp/saas-skeleton-cookies \
+  'http://localhost:8080/api/v1/organizations?page=0&size=20'
+
+ORGANIZATION_ID='paste-the-created-organization-id-here'
+
+# Select an organization in the PostgreSQL-backed HTTP session.
+curl --fail-with-body -i -X PUT \
+  -b /tmp/saas-skeleton-cookies -c /tmp/saas-skeleton-cookies \
+  -H 'Content-Type: application/json' \
+  -H "X-CSRF-TOKEN: $CSRF_TOKEN" \
+  --data "{\"organizationId\":\"$ORGANIZATION_ID\"}" \
+  http://localhost:8080/api/v1/organization-selection
+
+# Read the selected organization and the paginated membership list.
+curl --fail-with-body -b /tmp/saas-skeleton-cookies \
+  http://localhost:8080/api/v1/organization-selection
+curl --fail-with-body -b /tmp/saas-skeleton-cookies \
+  "http://localhost:8080/api/v1/organizations/$ORGANIZATION_ID/memberships?page=0&size=20"
+```
+
+To add an existing registered user, an owner sends `POST /api/v1/organizations/{organizationId}/memberships` with `{"email":"member@example.com","role":"MEMBER"}`. Only the owner can add, change or remove memberships; the owner membership itself cannot be reassigned or deleted through these endpoints. Every organization lookup and selection revalidates membership in the backend, and cross-organization access returns `404` without disclosing the inaccessible organization.
 
 Stop it with `Ctrl+C`.
 
