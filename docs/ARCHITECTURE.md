@@ -143,6 +143,8 @@ organization_memberships
 
 Membership binds a user to an organization and role.
 
+The implemented roles are `OWNER`, `ADMIN` and `MEMBER`. Creating an organization atomically creates its single owner membership. Membership collections are paginated; only `OWNER` may add users, change non-owner roles or remove non-owner memberships. The selected organization is stored in the shared JDBC-backed HTTP session and revalidated against current membership whenever it is read.
+
 Future tenant-owned tables include `organization_id` and are always queried through authorized tenant context.
 
 The client-provided organization identifier is not sufficient authorization.

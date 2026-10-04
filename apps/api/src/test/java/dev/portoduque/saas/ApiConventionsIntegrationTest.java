@@ -2,6 +2,7 @@ package dev.portoduque.saas.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import dev.portoduque.saas.organizations.OrganizationService;
 import dev.portoduque.saas.shared.api.ApiPaths;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -71,6 +72,9 @@ class ApiConventionsIntegrationTest {
 
     @MockitoBean
     private UserAccountDetailsService userAccountDetailsService;
+
+    @MockitoBean
+    private OrganizationService organizationService;
 
     @Test
     void returns_deterministic_openapi_contract_for_versioned_api() throws Exception {

@@ -92,6 +92,8 @@ Rules:
 - cross-tenant negative tests are mandatory;
 - authorization must be checked before protected state mutation, not afterward.
 
+The organizations baseline enforces these rules in backend services: only members can resolve/list an organization, inaccessible organizations return the same `404` contract as missing organizations, and only the immutable owner membership can administer non-owner memberships. Session organization selection stores only an identifier and revalidates membership on every read, so removal takes effect immediately. Tenant-owned product resources and their mandatory `organization_id` scoping are introduced in the dedicated tenant-isolation phase.
+
 ## Input and output
 
 - validate request DTOs with Bean Validation/custom validators as needed;

@@ -88,23 +88,26 @@ class DatabaseIntegrationTest {
                 "select extname from pg_extension where extname = 'pg_stat_statements'", String.class);
         List<String> successfulMigrations = jdbcTemplate.queryForList(
                 "select version from flyway_schema_history where success order by installed_rank", String.class);
-        List<String> authenticationTables = jdbcTemplate.queryForList(
+        List<String> applicationTables = jdbcTemplate.queryForList(
                 """
                 select table_name
                   from information_schema.tables
                  where table_schema = 'public'
-                   and table_name in ('users', 'auth_tokens', 'auth_rate_limits', 'spring_session', 'spring_session_attributes')
+                   and table_name in ('users', 'auth_tokens', 'auth_rate_limits', 'spring_session',
+                                      'spring_session_attributes', 'organizations', 'organization_memberships')
                  order by table_name
                 """,
                 String.class);
 
         assertThat(serverVersion).isGreaterThanOrEqualTo(180000);
         assertThat(installedExtensions).containsExactly("pg_stat_statements");
-        assertThat(successfulMigrations).containsExactly("1", "2");
-        assertThat(authenticationTables)
+        assertThat(successfulMigrations).containsExactly("1", "2", "3");
+        assertThat(applicationTables)
                 .containsExactly(
                         "auth_rate_limits",
                         "auth_tokens",
+                        "organization_memberships",
+                        "organizations",
                         "spring_session",
                         "spring_session_attributes",
                         "users");

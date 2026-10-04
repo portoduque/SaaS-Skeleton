@@ -100,6 +100,8 @@ The API conventions integration test boots a real local HTTP server without pers
 
 The authentication integration test runs the API through real PostgreSQL 18 and PgBouncer. It verifies UUIDv7/Argon2id registration, duplicate identity handling, CSRF allow/deny behavior, secure cookie attributes, session fixation rotation, JDBC persistence, logout invalidation, safe authentication errors, persistent rate limiting and hashed/expiring/single-use verification/reset tokens.
 
+The organizations integration test uses the same real database/proxy path. It verifies atomic owner creation, multiple organizations per user, pagination, server-side selection, owner-only membership administration, admin/member restrictions, role changes, duplicate and immutable-owner constraints, immediate revocation after removal, cross-organization non-disclosure, validation and unauthenticated access.
+
 ### Data-access performance correctness
 
 Tests/reviews should explicitly watch for:
