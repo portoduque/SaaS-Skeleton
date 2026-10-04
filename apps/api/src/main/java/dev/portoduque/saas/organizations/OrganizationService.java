@@ -69,7 +69,7 @@ public class OrganizationService {
     @Transactional
     OrganizationMembership addMembership(
             UUID organizationId, String email, OrganizationRole role, Authentication authentication) {
-        requireOwner(organizationId, authentication);
+        OrganizationMembership owner = requireOwner(organizationId, authentication);
         if (role == OrganizationRole.OWNER) {
             throw ownerRoleReserved();
         }
@@ -78,10 +78,9 @@ public class OrganizationService {
         if (memberships.existsByOrganizationIdAndUserId(organizationId, user.getId())) {
             throw membershipAlreadyExists();
         }
-        Organization organization = organizations.findById(organizationId).orElseThrow(this::organizationNotFound);
         try {
             return memberships.saveAndFlush(
-                    new OrganizationMembership(organization, user, role, clock.instant()));
+                    new OrganizationMembership(owner.organization(), user, role, clock.instant()));
         } catch (DataIntegrityViolationException exception) {
             throw membershipAlreadyExists();
         }

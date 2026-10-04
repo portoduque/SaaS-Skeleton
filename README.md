@@ -2,7 +2,7 @@
 
 Open-source SaaS starter focused on **security, performance, modularity, frontend independence and easy future scalability** — without overengineering.
 
-> Current state: **Phase 5 / organizations and memberships**. The backend provides the authentication core plus PostgreSQL-backed organizations, owner/admin/member roles, membership management and server-side organization selection. Later phases harden tenant context for organization-owned resources and add generated API clients, UI flows, deployment and final hardening.
+> Current state: **Phase 6 / tenant isolation hardening**. The backend provides the authentication core plus PostgreSQL-backed organizations, owner/admin/member roles, membership management, server-side organization selection and repository-level guardrails against unscoped tenant access. Later phases add generated API clients, UI flows, deployment and final hardening.
 
 ## What is already working
 
@@ -22,6 +22,7 @@ The current repository contains:
 - PostgreSQL-backed rate limiting for abuse-sensitive authentication actions;
 - UUIDv7 organizations and memberships with `OWNER`, `ADMIN` and `MEMBER` roles;
 - backend-enforced membership management, organization-scoped access and server-side organization selection;
+- allowlisted tenant repository surfaces plus explicit cross-tenant read/write denial tests;
 - Docker Compose persistence stack with private PostgreSQL and localhost-only PgBouncer;
 - JUnit/Testcontainers integration test against real PostgreSQL through PgBouncer;
 - Vitest + React Testing Library frontend tests;
@@ -379,7 +380,7 @@ curl --fail-with-body -b /tmp/saas-skeleton-cookies \
   "http://localhost:8080/api/v1/organizations/$ORGANIZATION_ID/memberships?page=0&size=20"
 ```
 
-To add an existing registered user, an owner sends `POST /api/v1/organizations/{organizationId}/memberships` with `{"email":"member@example.com","role":"MEMBER"}`. Only the owner can add, change or remove memberships; the owner membership itself cannot be reassigned or deleted through these endpoints. Every organization lookup and selection revalidates membership in the backend, and cross-organization access returns `404` without disclosing the inaccessible organization.
+To add an existing registered user, an owner sends `POST /api/v1/organizations/{organizationId}/memberships` with `{"email":"member@example.com","role":"MEMBER"}`. Only the owner can add, change or remove memberships; the owner membership itself cannot be reassigned or deleted through these endpoints. Every organization lookup, selection and membership mutation revalidates membership in the backend. Supplying another tenant's `organizationId` never grants access: supported cross-tenant reads and writes return `404` without disclosing or changing the inaccessible organization. Organization repositories intentionally expose only allowlisted operations; tenant-owned reads always include the organization/user scope.
 
 Stop it with `Ctrl+C`.
 
